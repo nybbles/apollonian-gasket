@@ -5,4 +5,5 @@ var draw = require('./draw');
 window.onload = function() {
   var s = Snap('#canvas');
   draw.draw_gasket(s, -10, 18, 23, 27);
+  // draw.draw_gasket(s, -3, 5, 8, 8);
 }

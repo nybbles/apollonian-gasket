@@ -25,8 +25,6 @@ function tangent_circle_center_internal(t, r0, r1, r2) {
   // left corner of the circle is still at (0,0), but the tangent
   // circle's point has been rotated relative to the tangent point
   // coordinates.
-  console.log(t);
-  console.log(angle);
   return [rotx, roty];
 }
 
@@ -62,19 +60,25 @@ exports.draw_gasket = function(s, cv0, cv1, cv2, cv3) {
   var c0 = s.circle(cx0+offsetx, cy0+offsety, cr0);
   make_circle_unfilled(c0);
 
+  var xlim = cx0-cr0;
+  var ylim = cy0-cr0;
+
   var cr1 = curvature_to_radius(cr0, cv0, cv1);
-  var cx1 = cx0;
-  var cy1 = cy0-cr0+cr1;
+  var cx1 = xlim+cr1;
+  var cy1 = cy0;
   var c1 = s.circle(cx1+offsetx, cy1+offsety, cr1);
   make_circle_unfilled(c1);
 
   var cr2 = curvature_to_radius(cr0, cv0, cv2);
 
-  var tp12 = [cx0,0];
-  tp12[1] -= cy0;
+  // var tp12 = [0,cr0];
+  // tp12[1] -= cy0;
+  var tp12 = [0,0];
 
   var xy2 = tangent_circle_center_internal(tp12, cr0, cr1, cr2);
-  var cx2 = xy2[0];
+  xy2[1] += +cr0;
+
+  var cx2 = xlim+xy2[0];
   var cy2 = xy2[1];
   var c2 = s.circle(cx2+offsetx, cy2+offsety, cr2);
   make_circle_unfilled(c2);
