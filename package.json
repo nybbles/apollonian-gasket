@@ -1,0 +1,21 @@
+{
+  "name": "apollonian-gasket",
+  "version": "0.0.1",
+  "description": "Apollonian gaskets, baby.",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Nimalan Mahendran",
+  "license": "ISC",
+  "dependencies": {
+    "snapsvg": "^0.4.0"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-open": "^2.0.0",
+    "gulp-tap": "^0.1.3"
+  }
+}
