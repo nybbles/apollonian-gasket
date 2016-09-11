@@ -4,6 +4,7 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var open = require('gulp-open');
 var tap = require('gulp-tap');
+var watch = require('gulp-watch');
 
 gulp.task('default', function() {
 
@@ -28,6 +29,12 @@ gulp.task('build-web', ['browserify'], function() {
 gulp.task('show-web', ['build-web'], function() {
   gulp.src('dist/index.html')
     .pipe(open());
+});
+
+gulp.task('watch-web', ['show-web'], function() {
+  watch('src/*.js', function() {
+    gulp.start('build-web');
+  });
 });
 
 gulp.task('clean-dist', function () {
