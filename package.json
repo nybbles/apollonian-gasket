@@ -9,6 +9,7 @@
   "author": "Nimalan Mahendran",
   "license": "ISC",
   "dependencies": {
+    "mathjs": "^3.5.0",
     "snapsvg": "^0.4.0"
   },
   "devDependencies": {
