@@ -118,10 +118,16 @@ function shuffle (array) {
   }
 }
 
-function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
-  while (draw_queue.length > 0) {
-    // shuffle(draw_queue);
+function circle_to_str(circle) {
+  var cr = circle.cr;
+  var z = circle.z;
+  return cr.toFixed(2)+':'+z[0].toFixed(2)+':'+z[1].toFixed(2);
+}
 
+function run_draw_queue(
+  s, offset, draw_queue, drawn_circles, refcv, refcr, n_circles_drawn
+) {
+  while (draw_queue.length > 0) {
     var entry = draw_queue.pop();
 
     if (entry.length == 3) {
@@ -138,7 +144,6 @@ function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
       // compute next circle's curvature
       var cvs = tangent_curvature(cv0, cv1, cv2)
             .filter(function(x) { return x > 0; });
-      shuffle(cvs);
 
       for (var i = 0; i < cvs.length; ++i) {
         var cv3 = cvs[i];
@@ -161,10 +166,15 @@ function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
           curvature_to_radius(refcr, refcv, cv2),
           curvature_to_radius(refcr, refcv, cv1)
         );
-        // shuffle(z3s);
 
         for (var j = 0; j < z3s.length; ++j) {
           var z3 = z3s[j];
+          var circle = {cr:cr3, z:z3};
+
+          if (circle_to_str(circle) in drawn_circles) {
+            // don't draw circles that have already been drawn
+            continue;
+          }
 
           // add triples generated from next circle into draw queue.
           draw_queue.push([
@@ -185,17 +195,18 @@ function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
             {cv:cv3, z:z3},
           ]);
 
-          draw_queue.push({cr:cr3, z:z3});
+          draw_queue.push(circle);
         }
       }
     } else {
       var circle = entry;
       var cr = circle.cr;
       var z = circle.z;
-      console.log(circle);
 
       var c = s.circle(z[0]+offset[0], z[1]+offset[1], cr);
       make_circle_unfilled(c);
+
+      drawn_circles[circle_to_str(circle)] = 1;
 
       n_circles_drawn++;
       if (n_circles_drawn > 2000) {
@@ -237,6 +248,7 @@ exports.draw_gasket = function(s, cv0, cv1, cv2, cv3) {
   make_circle_unfilled(c2);
 
   var draw_queue = [];
+  var drawn_circles = {};
 
   // insert first triple of circles into draw queue
   draw_queue.push([
@@ -246,5 +258,8 @@ exports.draw_gasket = function(s, cv0, cv1, cv2, cv3) {
   ]);
 
   var n_circles_drawn = 3;
-  run_draw_queue(s, offset, draw_queue, cv0, cr0, n_circles_drawn);
+  run_draw_queue(
+    s, offset, draw_queue, drawn_circles,
+    cv0, cr0, n_circles_drawn
+  );
 };
