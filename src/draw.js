@@ -75,7 +75,7 @@ function make_circle_unfilled(c) {
   c.attr({
     fill: "white",
     stroke: "black",
-    strokeWidth: 2
+    strokeWidth: 1
   });
 }
 
@@ -120,7 +120,7 @@ function shuffle (array) {
 
 function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
   while (draw_queue.length > 0) {
-    shuffle(draw_queue);
+    // shuffle(draw_queue);
 
     var entry = draw_queue.pop();
 
@@ -143,6 +143,12 @@ function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
       for (var i = 0; i < cvs.length; ++i) {
         var cv3 = cvs[i];
         var cr3 = curvature_to_radius(refcr, refcv, cv3);
+
+        if (cr3 <= 2) {
+          // don't bother drawing circles that are too small
+          continue;
+        }
+
         var z3s = tangent_circle_center_descartes(
           cv0, cv1, cv2, cv3,
           z0, z1, z2
@@ -155,16 +161,26 @@ function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
           curvature_to_radius(refcr, refcv, cv2),
           curvature_to_radius(refcr, refcv, cv1)
         );
-        shuffle(z3s);
+        // shuffle(z3s);
 
         for (var j = 0; j < z3s.length; ++j) {
           var z3 = z3s[j];
 
-          // add triples generated from next circle into draw queue
-          // TODO: add test to see if new circle is tangent to
-          // outer-most circle and then add the outer-most circle too.
+          // add triples generated from next circle into draw queue.
           draw_queue.push([
             {cv:cv1, z:z1},
+            {cv:cv2, z:z2},
+            {cv:cv3, z:z3},
+          ]);
+
+          draw_queue.push([
+            {cv:cv0, z:z0},
+            {cv:cv1, z:z1},
+            {cv:cv3, z:z3},
+          ]);
+
+          draw_queue.push([
+            {cv:cv0, z:z0},
             {cv:cv2, z:z2},
             {cv:cv3, z:z3},
           ]);
@@ -182,7 +198,7 @@ function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
       make_circle_unfilled(c);
 
       n_circles_drawn++;
-      if (n_circles_drawn > 1000) {
+      if (n_circles_drawn > 2000) {
         break;
       }
     }
