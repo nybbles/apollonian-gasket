@@ -84,7 +84,7 @@ function select_tangent_circle_solution(
   z2, z1, // centers
   cr3, cr2, cr1 // radii
 ) {
-  var result;
+  var result = [];
   var tol = 1e-5;
   for (var i = 0; i < 2; ++i) {
     var z3 = z3s[i];
@@ -98,72 +98,93 @@ function select_tangent_circle_solution(
       continue;
     }
 
-    result = z3;
-    break;
+    result.push(z3);
   }
 
   return result;
 }
 
+// copied from https://www.frankmitchell.org/2015/01/fisher-yates/
+function shuffle (array) {
+  var i = 0;
+  var j = 0;
+  var temp = null;
+
+  for (i = array.length - 1; i > 0; i -= 1) {
+    j = Math.floor(Math.random() * (i + 1));
+    temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}
+
 function run_draw_queue(s, offset, draw_queue, refcv, refcr, n_circles_drawn) {
   while (draw_queue.length > 0) {
-    var triple = draw_queue.pop();
+    shuffle(draw_queue);
 
-    var cv0 = triple[0].cv;
-    var cv1 = triple[1].cv;
-    var cv2 = triple[2].cv;
+    var entry = draw_queue.pop();
 
-    var z0 = triple[0].z;
-    var z1 = triple[1].z;
-    var z2 = triple[2].z;
+    if (entry.length == 3) {
+      var triple = entry;
 
-    // compute next circle's curvature TODO: This returns two
-    // solutions. Need to figure out how to use them. Use the first
-    // one for now.
-    var cvs = tangent_curvature(cv0, cv1, cv2);
-    var cv3;
-    if (cvs[1] > 0) {
-      cv3 = cvs[1];
+      var cv0 = triple[0].cv;
+      var cv1 = triple[1].cv;
+      var cv2 = triple[2].cv;
+
+      var z0 = triple[0].z;
+      var z1 = triple[1].z;
+      var z2 = triple[2].z;
+
+      // compute next circle's curvature
+      var cvs = tangent_curvature(cv0, cv1, cv2)
+            .filter(function(x) { return x > 0; });
+      shuffle(cvs);
+
+      for (var i = 0; i < cvs.length; ++i) {
+        var cv3 = cvs[i];
+        var cr3 = curvature_to_radius(refcr, refcv, cv3);
+        var z3s = tangent_circle_center_descartes(
+          cv0, cv1, cv2, cv3,
+          z0, z1, z2
+        );
+
+        // console.log(z3s);
+        z3s = select_tangent_circle_solution(
+          z3s, z2, z1,
+          cr3,
+          curvature_to_radius(refcr, refcv, cv2),
+          curvature_to_radius(refcr, refcv, cv1)
+        );
+        shuffle(z3s);
+
+        for (var j = 0; j < z3s.length; ++j) {
+          var z3 = z3s[j];
+
+          // add triples generated from next circle into draw queue
+          // TODO: add test to see if new circle is tangent to
+          // outer-most circle and then add the outer-most circle too.
+          draw_queue.push([
+            {cv:cv1, z:z1},
+            {cv:cv2, z:z2},
+            {cv:cv3, z:z3},
+          ]);
+
+          draw_queue.push({cr:cr3, z:z3});
+        }
+      }
     } else {
-      cv3 = cvs[0];
-    }
-    // var cv3 = cvs[1];
-    // var cv3 = math.max(cvs[0], cvs[1]);
-    console.log(cv3);
-    var cr3 = curvature_to_radius(refcr, refcv, cv3);
-    var z3s = tangent_circle_center_descartes(
-      cv0, cv1, cv2, cv3,
-      z0, z1, z2
-    );
-    // console.log(z3s);
-    var z3 = select_tangent_circle_solution(
-      z3s, z2, z1,
-      cr3,
-      curvature_to_radius(refcr, refcv, cv2),
-      curvature_to_radius(refcr, refcv, cv1)
-    );
-    console.log(z3);
+      var circle = entry;
+      var cr = circle.cr;
+      var z = circle.z;
+      console.log(circle);
 
-    // add triples generated from next circle into draw queue
-    draw_queue.push([
-      {cv:cv1, z:z1},
-      {cv:cv2, z:z2},
-      {cv:cv3, z:z3},
-    ]);
+      var c = s.circle(z[0]+offset[0], z[1]+offset[1], cr);
+      make_circle_unfilled(c);
 
-    // draw next circle
-    var c3 = s.circle(z3[0]+offset[0], z3[1]+offset[1], cr3);
-    make_circle_unfilled(c3);
-
-    /*
-    console.log(cv3);
-    console.log(cr3);
-    console.log(z3);
-     */
-
-    n_circles_drawn++;
-    if (n_circles_drawn > 10) {
-      break;
+      n_circles_drawn++;
+      if (n_circles_drawn > 1000) {
+        break;
+      }
     }
   }
 }
