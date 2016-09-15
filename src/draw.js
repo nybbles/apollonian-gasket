@@ -209,7 +209,7 @@ function run_draw_queue(
       drawn_circles[circle_to_str(circle)] = 1;
 
       n_circles_drawn++;
-      if (n_circles_drawn > 2000) {
+      if (n_circles_drawn > 1000) {
         break;
       }
     }
